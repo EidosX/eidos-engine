@@ -1,6 +1,6 @@
 [project]
 name = "eidos-engine"
-version = "0.7.0"
+version = "1.0.0"
 description = "A scalable and flexible ETL framework for distributed data processing."
 readme = "README.md"
 authors = [
