@@ -83,7 +83,7 @@ class ETL:
         
         self.logfire_enable = False
         if self.logfire_write_token:
-            logfire.configure(token = self.logfire_write_token,environment=self.logfire_environment, scrubbing = False, service_name = 'eidos-engine')
+            logfire.configure(console=False, token = self.logfire_write_token,environment=self.logfire_environment, scrubbing = False, service_name = 'eidos-engine')
             self.logfire_enable = True
             
     def _add_prefix_to_keys(self, d):
