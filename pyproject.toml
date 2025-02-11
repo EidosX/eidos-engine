@@ -3,6 +3,10 @@ name = "eidos-engine"
 version = "0.2.0"
 description = "A scalable and flexible ETL framework for distributed data processing."
 readme = "README.md"
+authors = [
+  { name = 'Kevin Zezel Gomes' },
+  { name = 'Felipe Bizzo' }
+]
 requires-python = ">=3.12"
 dependencies = [
     "deltalake>=0.24.0",
@@ -12,3 +16,9 @@ dependencies = [
     "polars>=1.22.0",
     "tqdm>=4.67.1",
 ]
+license = {file = 'LICENSE'}
+
+[project.urls]
+homepage = 'https://github.com/EidosX/eidos-engine'
+documentation = 'https://github.com/EidosX/eidos-engine'
+repository = 'https://github.com/EidosX/eidos-engine'
