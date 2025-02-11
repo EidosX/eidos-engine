@@ -185,9 +185,10 @@ class ETL:
             raise Exception(f"Process_id {process_id} already exists in output_folder")
    
         os.makedirs(f"{self.output_folder}/{process_id}", exist_ok=True)    
-        self.logger = _setup_logging(f"{self.output_folder}/{process_id}/main.log", self.tz)
-    
-            
+        
+        if not self.disable_logs:
+            self.logger = _setup_logging(f"{self.output_folder}/{process_id}/main.log", self.tz)
+
         self._log(f"Starting, Process_id: {process_id}", "info")
         
         if not isinstance(df, (pd.DataFrame, pl.DataFrame, str)):
@@ -195,7 +196,7 @@ class ETL:
         
         self._log("Loading data", "info")
         df, _delay = self._load_data(df)
-        self._log(f"Loaded data in {_delay:.2f} seconds", "info")
+        self._log(f"Loaded data in {_delay/60:.2f} min", "info")
  
         df = df.slice(skip or 0, limit or df.shape[0] - (skip or 0))
             
@@ -228,6 +229,10 @@ class ETL:
             if final_num_errors / height > self.block_errors:
                 raise Exception(self._log(f"Too many errors in batch {i * batch_size} -> {i * batch_size + batch_size}", "error"))
             
-            self._log(f"Batch {i * batch_size} -> {i * batch_size + batch_size}, {final_num_errors} errors, Finished @{time.time() - tt:.2f}s", "info")
-        
-        self._log(f"Processing Finished @{time.time() - t:.2f}s", "info")
+            t_batch_time = time.time() - tt
+            self._log(f"Batch {i * batch_size} -> {i * batch_size + batch_size}, {final_num_errors} errors, Finished @{t_batch_time/60:.2f} min", "info")
+            self._log(f"Estimated finish time: {((math.ceil(df.height / batch_size) - (i+1)) * t_batch_time) /60:.2f} min, Throughput: {height/t_batch_time:.2f} it/s", "info")
+            
+        self._log(f"Processing Finished @{(time.time() - t)/60:.2f} min", "info")
+
+        return process_id
