@@ -51,7 +51,6 @@ class ETL:
             disable_logs = False
         ):
         
-        self._total_run = 0
         self.process_id = None
         self.logger = None
         
@@ -82,7 +81,7 @@ class ETL:
         self.disable_logs = disable_logs
         
         self.logfire_enable = False
-        if self.logfire_write_token:
+        if self.logfire_write_token and not self.disable_logs:
             logfire.configure(console=False, token = self.logfire_write_token,environment=self.logfire_environment, scrubbing = False, service_name = 'eidos-engine')
             self.logfire_enable = True
             
@@ -202,8 +201,6 @@ class ETL:
             
         if df.shape[0] == 0:
             raise Exception(self._log("Nothing to process", "error"))
-        
-        self._total_run = df.height
         
         self._log("Processing", "info")
         t = time.time()
