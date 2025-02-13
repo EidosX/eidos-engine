@@ -115,12 +115,17 @@ class ETL:
                 delay = time.time() - t
             except Exception:
                 num_errors += 1
-                batch_final.append({**d,f'{self.output_fields_prefix}status':0, f'{self.output_fields_prefix}error': traceback.format_exc()})    
+                batch_final.append({**d,
+                                        f'{self.output_fields_prefix}status':0, 
+                                        f'{self.output_fields_prefix}error': traceback.format_exc()})    
                 continue
             
             if not isinstance(resp, dict):
                 raise TypeError("Custom function must return dict")
-            batch_final.append({**d,f'{self.output_fields_prefix}delay':delay,f'{self.output_fields_prefix}status':1,**self._add_prefix_to_keys(resp)})
+            batch_final.append({**d,f'{self.output_fields_prefix}delay':delay,
+                                    f'{self.output_fields_prefix}status':1,
+                                    **self._add_prefix_to_keys(resp), 
+                                    f'{self.output_fields_prefix}error': ''})
     
         return batch_final, num_errors
 
