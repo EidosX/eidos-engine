@@ -11,7 +11,7 @@ import logging
 import math
 import pytz
 import logfire
-
+import shutil
 
 def _setup_logging(log_file, tz):
     # Remove todos os handlers anteriores
@@ -187,8 +187,8 @@ class ETL:
             num_threads, 
             limit = None, 
             skip = None, 
-            process_id = None
-            
+            process_id = None,
+            clean_run = False
         ):
         
         if process_id is None:
@@ -197,8 +197,11 @@ class ETL:
         self.process_id = process_id
     
         if os.path.exists(f"{self.output_folder}/{process_id}"):
-            raise Exception(f"Process_id {process_id} already exists in output_folder")
-   
+            if not clean_run:
+                raise Exception(f"Process_id {process_id} already exists in output_folder")
+            else:
+                shutil.rmtree(f"{self.output_folder}/{process_id}")
+                
         os.makedirs(f"{self.output_folder}/{process_id}", exist_ok=True)
         if self.write_engine == 'parquet':
             os.makedirs(f"{self.output_folder}/{process_id}/result", exist_ok=True)
