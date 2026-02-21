@@ -48,12 +48,17 @@ class ETL:
             tz = pytz.timezone('America/Sao_Paulo'),
             logfire_write_token = None,
             logfire_environment = None,
-            disable_logs = False
+            disable_logs = False,
+            write_engine = 'delta-lake'
         ):
         
+        self.write_engine = write_engine
+        if self.write_engine not in ['delta-lake','parquet']:
+            raise Exception("Currently only delta-lake and parquet engines are supported")
+
         self.process_id = None
         self.logger = None
-        
+ 
         self.custom_function = custom_function
     
         if not isinstance(output_fields_prefix, str):
@@ -90,6 +95,7 @@ class ETL:
 
     def _load_data(self, df):
         t = time.time()
+        
         if isinstance(df, pd.DataFrame):
             return pl.from_pandas(df), time.time() - t
         elif isinstance(df, pl.DataFrame):
@@ -104,7 +110,7 @@ class ETL:
                 logging.error(msg)
                 raise FileNotFoundError(msg)
             return pl.read_parquet(df), time.time() - t
-    
+        
     def _process_batch(self, batch):
         batch_final = []
         num_errors = 0
@@ -162,7 +168,11 @@ class ETL:
         if not os.path.exists(f"{self.output_folder}/{process_id}"):
             raise Exception(f"Process_id {process_id} not exists in output_folder")
         
-        df = pl.read_delta(f"{self.output_folder}/{process_id}/result")
+        if self.write_engine == 'delta-lake':
+            df = pl.read_delta(f"{self.output_folder}/{process_id}/result")
+        elif self.write_engine == 'parquet':
+            df = pl.read_parquet(f"{self.output_folder}/{process_id}/result")
+            
         if output_type == 'pandas':
             df = df.to_pandas()
         elif output_type == 'json':
@@ -189,7 +199,9 @@ class ETL:
         if os.path.exists(f"{self.output_folder}/{process_id}"):
             raise Exception(f"Process_id {process_id} already exists in output_folder")
    
-        os.makedirs(f"{self.output_folder}/{process_id}", exist_ok=True)    
+        os.makedirs(f"{self.output_folder}/{process_id}", exist_ok=True)
+        if self.write_engine == 'parquet':
+            os.makedirs(f"{self.output_folder}/{process_id}/result", exist_ok=True)
         
         if not self.disable_logs:
             self.logger = _setup_logging(f"{self.output_folder}/{process_id}/main.log", self.tz)
@@ -230,7 +242,11 @@ class ETL:
                     final_num_errors += num_errors
 
             if final_results:
-                write_deltalake(f"{self.output_folder}/{process_id}/result", pl.DataFrame(final_results), mode='append')
+                if self.write_engine == 'delta-lake':
+                    write_deltalake(f"{self.output_folder}/{process_id}/result", pl.DataFrame(final_results), mode='append')
+                elif self.write_engine == 'parquet':
+                    pl.DataFrame(final_results).write_parquet(f"{self.output_folder}/{process_id}/result/{i}.parquet")
+                    
             if final_num_errors / height > self.block_errors:
                 raise Exception(self._log(f"Too many errors in batch {i * batch_size} -> {i * batch_size + batch_size}", "error"))
             
