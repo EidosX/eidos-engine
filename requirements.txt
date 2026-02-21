@@ -1,5 +1,6 @@
-deltalake>=0.24.0
-logfire>=3.5.3
-pandas>=2.2.3
-polars>=1.22.0
-tqdm>=4.67.1
+deltalake==0.24.0
+logfire==3.5.3
+pandas==2.2.3
+polars==1.22.0
+tqdm==4.67.1
+pytz==2025.2
